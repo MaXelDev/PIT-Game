@@ -173,3 +173,20 @@ TXT
     pit_rappel 4 >> "$d/instruction"
     pit_copie_verificateur 4 "$d"
 }
+
+gen_V() {
+    local d; d=$(pit_dossier 5)
+    printf 'Initialisation du signal…\n' > "$d/signal.txt"
+    cat > "$d/instruction" <<'TXT'
+MISSION V — Les brouilleurs
+1. Le fichier signal.txt est illisible tant qu'un brouilleur est actif.
+2. Trouvez les brouilleurs A, B et C : ps aux | grep brouilleur
+3. Neutralisez-les avec kill PID, ou suspendez-les avec kill -STOP PID.
+4. Ne tuez pas emetteur : il sera relancé avec une pénalité de 60 secondes.
+5. Si vous suspendez emetteur par erreur, reprenez-le avec kill -CONT PID.
+6. Ne touchez jamais horloge : la bombe exploserait.
+7. Consultez kill -l, puis relisez signal.txt avec cat. bash verifier.sh donne l'état.
+TXT
+    pit_rappel 5 >> "$d/instruction"
+    pit_copie_verificateur 5 "$d"
+}

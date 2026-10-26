@@ -44,6 +44,12 @@ verif_4() {
     point "Fichier retiré de l'arborescence (mv, pas cp)" absent "$x/$c"
     if fin 4; then printf 'Fragment 4 : %s\n' "${PIT_CODE:3:1}" > "$x/code_niveau4.txt"; printf 'code_niveau4.txt créé.\n'; fi
 }
+verif_5() {
+    local n
+    for n in A B C; do point "Brouilleur $n neutralisé" eval "! pit_actif brouilleur_$n"; done
+    point 'Emetteur actif' pit_actif emetteur
+    ((ok_total)) && printf 'Lisez maintenant signal.txt.\n'
+}
 verif_final() {
     local saisie reste debut
     saisie=$(tr -d ' \t\r\n' < "$PIT_RACINE/code.txt" 2>/dev/null)
