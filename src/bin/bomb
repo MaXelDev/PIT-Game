@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 source "$PIT_SOURCE/src/lib.sh"
 pit_init_variables
+# Affichage seul : un tube fermé (bomb | head) ne doit pas produire de bruit.
+exec 2>/dev/null
 n=$(pit_minuteur) || { pit_fin explosion 'minuteur invalide'; exit 1; }
 couleur=32; ((n<1800)) && couleur=33; ((n<600)) && couleur=31
 barre=$((n*30/PIT_DUREE)); printf '\033[%smTemps : %s [' "$couleur" "$(pit_temps "$n")"
