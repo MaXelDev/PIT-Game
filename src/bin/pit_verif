@@ -50,6 +50,16 @@ verif_5() {
     point 'Emetteur actif' pit_actif emetteur
     ((ok_total)) && printf 'Lisez maintenant signal.txt.\n'
 }
+droits_ok() { [[ $(stat -c %a "$1") == "$(<"$(ref 6)/droits")" ]]; }
+verif_coffre() {
+    local f; f=$(d 6)/coffre.sh
+    point 'Vous êtes propriétaire de coffre.sh' test "$(stat -c %u "$f")" = "$(id -u)"
+    point 'Droits conformes à la règle' droits_ok "$f"
+    point 'Variable CLE exportée' test -n "${CLE+x}"
+    point 'Valeur de CLE correcte' test "${CLE-}" = "$(<"$PIT_ETAT/agent")"
+    ((ok_total)) || printf 'Droits actuels : %s. CLE doit être visible par le script (export).\n' "$(stat -c %A "$f")"
+    fin 6
+}
 verif_final() {
     local saisie reste debut
     saisie=$(tr -d ' \t\r\n' < "$PIT_RACINE/code.txt" 2>/dev/null)

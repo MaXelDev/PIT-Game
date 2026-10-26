@@ -190,3 +190,28 @@ TXT
     pit_rappel 5 >> "$d/instruction"
     pit_copie_verificateur 5 "$d"
 }
+
+gen_VI() {
+    local d ref=$PIT_ETAT/ref/6 o g a mots=("aucun droit" "lire seulement" "lire et exécuter"); d=$(pit_dossier 6)
+    o=$((5 + 2 * (RANDOM % 2))); g=$((RANDOM % 3)); a=$((RANDOM % 2))
+    local val=(0 4 5)
+    printf '%s%s%s\n' "$o" "${val[g]}" "${val[a]}" > "$ref/droits"
+    printf 'AGENT-%s\n' "$(pit_chaine 6)" > "$PIT_ETAT/agent"
+    # shellcheck disable=SC2016 # $BASH doit être évalué par le script généré.
+    printf '#!/bin/bash\n# Coffre du niveau VI.\nexec "$BASH" "%s/bin/pit_verif" coffre\n' "$PIT_ETAT" > "$d/coffre.sh"
+    chmod 000 "$d/coffre.sh"
+    {
+        printf 'MISSION VI — Le coffre\n'
+        printf '1. coffre.sh a été créé sans aucun droit (000).\n'
+        printf '2. Règle : propriétaire : %s ; groupe : %s ; autres : %s.\n' "$([[ $o == 7 ]] && printf 'lire, écrire et exécuter' || printf 'lire et exécuter')" "${mots[g]}" "${mots[a]}"
+        printf '3. Traduisez cette règle avec chmod, en octal ou en symbolique.\n'
+        printf '4. Vérifiez avec ls -l que vous êtes propriétaire (chown sinon).\n'
+        # shellcheck disable=SC2016 # Texte affiché littéralement au joueur.
+        printf '5. Lisez la variable avec : echo $CODE_AGENT\n'
+        printf '6. Exportez une variable CLE contenant exactement cette valeur.\n'
+        printf '7. Lancez ./coffre.sh. Sans export, le script ne voit pas CLE.\n'
+        # shellcheck disable=SC2016 # Texte affiché littéralement au joueur.
+        printf '8. Prudence : ne remplacez jamais PATH sans conserver $PATH.\n'
+    } > "$d/instruction"
+    pit_rappel 6 >> "$d/instruction"
+}
