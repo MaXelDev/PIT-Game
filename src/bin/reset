@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+printf 'Usage : reset n1 … reset n8\n'

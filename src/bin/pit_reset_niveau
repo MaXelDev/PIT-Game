@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+source "$PIT_SOURCE/src/lib.sh"
+source "$PIT_SOURCE/src/generate.sh"
+# Le dossier courant du joueur peut être supprimé pendant la régénération.
+cd -- "$PIT_ETAT" || exit 1
+[[ $# == 1 && $1 =~ ^[1-8]$ ]] || exit 1
+pit_init_variables
+mkdir "$PIT_ETAT/maintenance" 2>/dev/null || exit 1
+trap 'rmdir "$PIT_ETAT/maintenance" 2>/dev/null || :' EXIT
+n=$1; roman=${PIT_ROMAINS[n-1]}
+declare -F "gen_$roman" >/dev/null || { printf 'Niveau %s indisponible.\n' "$roman"; exit 1; }
+pit_arreter_niveau "$n"
+rm -rf -- "$PIT_RACINE/niveau_$roman" "$PIT_ETAT/ref/$n"
+mkdir -p "$PIT_RACINE/niveau_$roman" "$PIT_ETAT/ref/$n"
+"gen_$roman" || exit 1
+pit_processus_niveau "$n"
+printf 'Niveau %s régénéré gratuitement.\n' "$roman"

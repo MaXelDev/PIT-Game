@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+source "$PIT_SOURCE/src/lib.sh"
+source "$PIT_SOURCE/src/generate.sh"
+# Le dossier courant du joueur peut être supprimé pendant la régénération.
+cd -- "$PIT_ETAT" || exit 1
+mkdir "$PIT_ETAT/maintenance" 2>/dev/null || exit 1
+trap 'rmdir "$PIT_ETAT/maintenance" 2>/dev/null || :' EXIT
+pit_stop horloge
+pit_arreter_niveau 5; pit_arreter_niveau 8
+pit_generate || exit 1
+pit_demarrer horloge horloge.sh
+pit_processus_niveau 5; pit_processus_niveau 8
+printf 'Nouvelle partie générée.\n'

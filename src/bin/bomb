@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+source "$PIT_SOURCE/src/lib.sh"
+pit_init_variables
+n=$(pit_minuteur) || { pit_fin explosion 'minuteur invalide'; exit 1; }
+couleur=32; ((n<1800)) && couleur=33; ((n<600)) && couleur=31
+barre=$((n*30/PIT_DUREE)); printf '\033[%smTemps : %s [' "$couleur" "$(pit_temps "$n")"
+for ((i=0;i<30;i++)); do ((i<barre)) && printf '#' || printf '.'; done
+printf ']\033[0m\n'
+printf 'Numéro de série : '; cat "$PIT_ETAT/serie"
+printf 'Modèle : PIT / INSA-RT-8\n'
+valides=(); for ((i=1;i<=8;i++)); do [[ -f $PIT_ETAT/valides/$i ]] && valides+=("${PIT_ROMAINS[i-1]}"); done
+printf 'Niveaux validés : %s/8 — %s\n' "${#valides[@]}" "${valides[*]:-aucun}"
+erreurs=0; total=0
+while read -r valeur _; do ((erreurs+=1)); ((total+=valeur)); done < "$PIT_ETAT/erreurs"
+printf 'Erreurs : %s | Pénalités : %s s\n' "$erreurs" "$total"
+printf 'Tentatives de code : '; wc -l < "$PIT_ETAT/tentatives"
+cat "$PIT_ETAT/voyants"
+printf 'Position : %s\n' "$PWD"

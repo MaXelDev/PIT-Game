@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2016 # Les tests composés passent à eval des variables à évaluer plus tard.
+# Vérificateurs : comparaison avec les références de l'état.
+source "$PIT_SOURCE/src/lib.sh"
+pit_init_variables
+ok_total=1
+point() {
+    local titre=$1; shift
+    if "$@" >/dev/null 2>&1; then printf '\033[32m✔\033[0m %s\n' "$titre"; else printf '\033[31m✘\033[0m %s\n' "$titre"; ok_total=0; fi
+}
+meme() { [[ -f $1 && -f $2 ]] && cmp -s -- "$1" "$2"; }
+absent() { [[ ! -e $1 && ! -L $1 ]]; }
+d() { printf '%s/niveau_%s' "$PIT_RACINE" "${PIT_ROMAINS[$1-1]}"; }
+ref() { printf '%s/ref/%s' "$PIT_ETAT" "$1"; }
+fin() { if ((ok_total)); then pit_valider "$1"; else printf 'Niveau incomplet : corrigez les points marqués ✘.\n'; return 1; fi; }
+
+verif_final() {
+    local saisie reste debut
+    saisie=$(tr -d ' \t\r\n' < "$PIT_RACINE/code.txt" 2>/dev/null)
+    if [[ -z $saisie || $saisie == ________ ]]; then printf 'Écrivez les 8 fragments dans code.txt, puis relancez bash verifier.\n'; return 0; fi
+    if [[ ! $saisie =~ ^[A-Za-z0-9]{8}$ ]]; then printf 'Format invalide : 8 caractères alphanumériques attendus.\n'; return 1; fi
+    printf '%s\n' "$saisie" >> "$PIT_ETAT/tentatives"
+    if [[ $saisie != "$PIT_CODE" ]]; then
+        pit_penalite 300 'mauvais code'
+        printf '\033[31mCODE FAUX : pénalité de 5 minutes.\033[0m\n'; return 1
+    fi
+    reste=$(pit_minuteur) || reste=0; IFS= read -r debut < "$PIT_ETAT/debut"
+    mkdir "$PIT_ETAT/termine" 2>/dev/null || return 1
+    printf 'victoire\n' > "$PIT_ETAT/issue"
+    printf '\033[32mBOMBE DÉSAMORCÉE.\033[0m Temps restant : %s. Temps écoulé : %s.\n' "$(pit_temps "$reste")" "$(pit_temps "$(( $(date +%s) - debut ))")"
+}
+case ${1-} in
+    [1-8]|coffre|final) declare -F "verif_$1" >/dev/null || { printf 'Vérificateur indisponible.\n'; exit 1; }; "verif_$1";;
+    *) printf 'Usage : pit_verif 1…8\n'; exit 1;;
+esac
