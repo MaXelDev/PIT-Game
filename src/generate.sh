@@ -215,3 +215,30 @@ gen_VI() {
     } > "$d/instruction"
     pit_rappel 6 >> "$d/instruction"
 }
+
+gen_VII() {
+    local d ref=$PIT_ETAT/ref/7 m dir; d=$(pit_dossier 7)
+    m=$ref/orig/mission; mkdir -p "$m/rapports" "$m/systeme/portes/nord" "$m/systeme/portes/sud" "$m/sauvegardes" "$m/notes" "$d/extraction"
+    printf 'Archive de mission %s\n' "$(pit_chaine 8)" > "$m/LISEZMOI.txt"
+    for dir in 1 2 3; do printf 'Jour %s : %s\n' "$dir" "$(pit_chaine 20)" > "$m/rapports/jour_$dir.txt"; done
+    dir=nord; ((RANDOM % 2)) && dir=sud
+    printf 'PORTE=%s\nACTIF=non\nCODE_SALLE=%s\n' "$dir" "$(pit_chaine 5)" > "$m/systeme/portes/$dir/ouverture.conf"
+    printf 'ACTIF=non\nANCIENNE=oui\n' > "$m/systeme/portes/sud/ouverture_old.conf"
+    printf 'ACTIF=non\nSAUVEGARDE=oui\n' > "$m/sauvegardes/ouverture.conf.bak"
+    printf 'Le fichier ouverture.conf est quelque part dans systeme.\n' > "$m/notes/ouverture_notes.txt"
+    tar -czf "$d/mission.tar.gz" -C "$ref/orig" mission
+    mkdir -p "$ref/attendu"; cp -R "$m" "$ref/attendu/"
+    sed -i 's/^ACTIF=non$/ACTIF=oui/' "$ref/attendu/mission/systeme/portes/$dir/ouverture.conf"
+    cat > "$d/instruction" <<'TXT'
+MISSION VII — L'archive
+1. Extrayez mission.tar.gz dans extraction/ : tar -xzvf mission.tar.gz -C extraction
+2. Trouvez avec find le fichier nommé exactement ouverture.conf.
+3. Ignorez ouverture_old.conf, ouverture.conf.bak et les notes.
+4. Avec vi, remplacez ACTIF=non par ACTIF=oui dans le bon fichier.
+5. Recompressez le dossier mission en retour.tar.gz dans niveau_VII :
+   tar -czvf retour.tar.gz -C extraction mission
+6. Lancez bash verifier.sh.
+TXT
+    pit_rappel 7 >> "$d/instruction"
+    pit_copie_verificateur 7 "$d"
+}

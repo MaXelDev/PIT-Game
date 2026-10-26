@@ -60,6 +60,15 @@ verif_coffre() {
     ((ok_total)) || printf 'Droits actuels : %s. CLE doit être visible par le script (export).\n' "$(stat -c %A "$f")"
     fin 6
 }
+verif_7() {
+    local x t m; x=$(d 7); t=$(mktemp -d "$PIT_ETAT/verif.XXXXXX")
+    point 'Extraction présente dans extraction/mission' test -d "$x/extraction/mission"
+    point 'retour.tar.gz lisible' tar -xzf "$x/retour.tar.gz" -C "$t"
+    m=$t/mission; [[ -d $m ]] || m=$t/extraction/mission
+    point 'Archive contenant le dossier mission' test -d "$m"
+    point 'ACTIF=oui seulement dans ouverture.conf' diff -r "$m" "$(ref 7)/attendu/mission"
+    pit_effacer "$t"; fin 7
+}
 verif_final() {
     local saisie reste debut
     saisie=$(tr -d ' \t\r\n' < "$PIT_RACINE/code.txt" 2>/dev/null)
