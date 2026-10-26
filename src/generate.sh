@@ -100,3 +100,33 @@ TXT
     pit_rappel 2 >> "$d/instruction"
     pit_copie_verificateur 2 "$d"
 }
+
+gen_III() {
+    local d ref=$PIT_ETAT/ref/3 i t pos=() rouge capteur statut; d=$(pit_dossier 3)
+    t=$((RANDOM % 30000))
+    while ((${#pos[@]} < 14)); do
+        i=$((RANDOM % 500)); [[ " ${pos[*]} " == *" $i "* ]] || pos+=("$i")
+    done
+    rouge=${pos[13]}
+    : > "$d/journal.log"
+    for ((i=0;i<500;i++)); do
+        t=$(((t + 1 + RANDOM % 120) % 86400)); capteur=$(printf '%02d' $((1 + RANDOM % 40)))
+        statut=OK; ((RANDOM % 5)) || statut="WARN température=$((40 + RANDOM % 20))"
+        if [[ " ${pos[*]:0:8} " == *" $i "* ]]; then statut='alerte de test ignorée'; fi
+        if [[ " ${pos[*]:8:5} " == *" $i "* ]]; then statut='ALERTE niveau=ORANGE'; fi
+        if ((i == rouge)); then statut='ALERTE niveau=ROUGE'; printf 'CAPTEUR=%s\n' "$capteur" > "$ref/rouge"; fi
+        printf '[%02d:%02d:%02d] CAPTEUR_%s : %s\n' $((t/3600)) $((t%3600/60)) $((t%60)) "$capteur" "$statut" >> "$d/journal.log"
+    done
+    { grep ALERTE "$d/journal.log"; cat "$ref/rouge"; } > "$ref/attendu"
+    cat > "$d/instruction" <<'TXT'
+MISSION III — Le journal des capteurs
+1. Avec un pipe, grep et >, enregistrez dans reponse.txt toutes les lignes
+   contenant ALERTE en majuscules. Exemple de forme : cat fichier | grep MOT > sortie
+2. Les lignes alerte en minuscules sont des leurres : grep est sensible à la casse.
+3. Repérez l'unique alerte ROUGE et ajoutez à la fin de reponse.txt une ligne
+   CAPTEUR=NN avec >> (NN est son numéro à deux chiffres).
+4. N'écrasez pas reponse.txt à l'étape 3, puis lancez bash verifier.sh.
+TXT
+    pit_rappel 3 >> "$d/instruction"
+    pit_copie_verificateur 3 "$d"
+}

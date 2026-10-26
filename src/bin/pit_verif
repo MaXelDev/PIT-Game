@@ -31,6 +31,12 @@ verif_2() {
     point 'Seule la ligne INVALIDE a été supprimée' meme "$x/config.txt" "$(ref 2)/config.attendu"
     fin 2
 }
+verif_3() {
+    local x; x=$(d 3)
+    point 'reponse.txt existe' test -f "$x/reponse.txt"
+    point 'Lignes ALERTE exactes, puis CAPTEUR=NN' meme "$x/reponse.txt" "$(ref 3)/attendu"
+    fin 3
+}
 verif_final() {
     local saisie reste debut
     saisie=$(tr -d ' \t\r\n' < "$PIT_RACINE/code.txt" 2>/dev/null)
