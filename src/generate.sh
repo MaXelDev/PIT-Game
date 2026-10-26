@@ -130,3 +130,46 @@ TXT
     pit_rappel 3 >> "$d/instruction"
     pit_copie_verificateur 3 "$d"
 }
+
+pit_fichier_iv() {
+    local f=$1 taille=$2 age=$3
+    printf 'MODE=veille\nERREUR=1\n' > "$f"
+    pit_remplir "$taille" '# paramètre de réserve' >> "$f"
+    printf '\n' >> "$f"
+    touch -d "$age" "$f"
+}
+
+gen_IV() {
+    local d ref=$PIT_ETAT/ref/4 z s r k=0 rack=() cible; d=$(pit_dossier 4)
+    mkdir -p "$d/labo"
+    for z in 1 2 3 4 5 6; do for s in a b c; do for r in 1 2; do
+        mkdir -p "$d/zone_$z/sec_$s/rack_$r"; rack+=("zone_$z/sec_$s/rack_$r")
+        for _ in 1 2 3 4; do
+            k=$((k + 1))
+            case $((RANDOM % 3)) in
+                0) pit_fichier_iv "$d/zone_$z/sec_$s/rack_$r/module_$k.cfg" "$((200 + RANDOM % 1200))" "$((3 + RANDOM % 80)) days ago";;
+                1) pit_fichier_iv "$d/zone_$z/sec_$s/rack_$r/notes_$k.txt" "$((200 + RANDOM % 1000))" "$((3 + RANDOM % 80)) days ago";;
+                *) pit_fichier_iv "$d/zone_$z/sec_$s/rack_$r/journal_$k.log" "$((200 + RANDOM % 1000))" "$((3 + RANDOM % 80)) days ago";;
+            esac
+        done
+    done; done; done
+    for _ in 1 2 3; do k=$((k + 1)); pit_fichier_iv "$d/${rack[RANDOM%36]}/ancien_$k.cfg" "$((3000 + RANDOM % 3000))" '30 days ago'; done
+    for _ in 1 2 3; do k=$((k + 1)); pit_fichier_iv "$d/${rack[RANDOM%36]}/recent_$k.cfg" "$((200 + RANDOM % 1000))" "$((1 + RANDOM % 20)) hours ago"; done
+    for _ in 1 2; do k=$((k + 1)); pit_fichier_iv "$d/${rack[RANDOM%36]}/gros_$k.txt" "$((3000 + RANDOM % 3000))" "$((1 + RANDOM % 20)) hours ago"; done
+    for _ in 1 2; do k=$((k + 1)); pit_fichier_iv "$d/${rack[RANDOM%36]}/secours_$k.cfg.bak" "$((3000 + RANDOM % 3000))" "$((1 + RANDOM % 20)) hours ago"; done
+    cible=${rack[RANDOM%36]}/noyau_$(pit_chaine 4).cfg
+    pit_fichier_iv "$d/$cible" "$((3000 + RANDOM % 3000))" "$((1 + RANDOM % 20)) hours ago"
+    printf '%s\n' "$cible" > "$ref/chemin"
+    sed -e 's/^MODE=veille$/MODE=actif/' -e '/^ERREUR=1$/d' "$d/$cible" > "$ref/attendu"
+    cat > "$d/instruction" <<'TXT'
+MISSION IV — Le fichier de configuration actif
+1. Trouvez l'unique fichier .cfg de plus de 2 Ko modifié il y a moins de 2 jours.
+2. Leurres : vieux .cfg lourds, .cfg récents légers, .txt lourds, .cfg.bak.
+3. Options utiles de find : -name, -size (k = Ko), -mtime (en jours). Voir man find.
+4. Déplacez-le avec mv dans labo/ (pas de copie).
+5. Avec vi, remplacez MODE=veille par MODE=actif et supprimez ERREUR=1.
+6. Lancez bash verifier.sh : il créera code_niveau4.txt si tout est correct.
+TXT
+    pit_rappel 4 >> "$d/instruction"
+    pit_copie_verificateur 4 "$d"
+}

@@ -37,6 +37,13 @@ verif_3() {
     point 'Lignes ALERTE exactes, puis CAPTEUR=NN' meme "$x/reponse.txt" "$(ref 3)/attendu"
     fin 3
 }
+verif_4() {
+    local x c nom; x=$(d 4); IFS= read -r c < "$(ref 4)/chemin"; nom=${c##*/}
+    point 'Fichier cible présent dans labo/' test -f "$x/labo/$nom"
+    point "Contenu modifié exactement comme demandé" meme "$x/labo/$nom" "$(ref 4)/attendu"
+    point "Fichier retiré de l'arborescence (mv, pas cp)" absent "$x/$c"
+    if fin 4; then printf 'Fragment 4 : %s\n' "${PIT_CODE:3:1}" > "$x/code_niveau4.txt"; printf 'code_niveau4.txt créé.\n'; fi
+}
 verif_final() {
     local saisie reste debut
     saisie=$(tr -d ' \t\r\n' < "$PIT_RACINE/code.txt" 2>/dev/null)
