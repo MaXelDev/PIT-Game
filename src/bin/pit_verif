@@ -69,6 +69,25 @@ verif_7() {
     point 'ACTIF=oui seulement dans ouverture.conf' diff -r "$m" "$(ref 7)/attendu/mission"
     pit_effacer "$t"; fin 7
 }
+verif_8() {
+    local x q t s; x=$(d 8); q=$x/.QG; t=$(mktemp -d "$PIT_ETAT/verif.XXXXXX")
+    point 'Phase 2 : rapport_final.txt déplacé à la racine de .QG' eval 'meme "$q/rapport_final.txt" "$(ref 8)/rapport" && absent "$q/$(<"$(ref 8)/chemin")"'
+    point 'Phase 2 : vide/ supprimé' absent "$q/vide"
+    point 'Phase 3 : sortie/rapport_final.txt copié' meme "$q/sortie/rapport_final.txt" "$(ref 8)/rapport"
+    point 'Phase 3 : sortie/cle.txt exact' meme "$q/sortie/cle.txt" "$(ref 8)/cle"
+    point 'Phase 4 : activation.sh avec MODE=ON' meme "$q/activation.sh" "$(ref 8)/activation"
+    point 'Phase 4 : activation.sh en 700' test "$(stat -c %a "$q/activation.sh" 2>/dev/null)" = 700
+    point 'Phase 4 : resultat.txt avec le bon jeton' meme "$q/sortie/resultat.txt" "$(ref 8)/resultat"
+    point 'Phase 4 : brouillon.tmp supprimé' absent "$q/sortie/brouillon.tmp"
+    tar -xzf "$x/livraison.tar.gz" -C "$t" 2>/dev/null; s=$t/sortie; [[ -d $s ]] || s=$t/.QG/sortie
+    point 'Phase 5 : livraison.tar.gz contient sortie complète' eval 'meme "$s/rapport_final.txt" "$(ref 8)/rapport" && meme "$s/cle.txt" "$(ref 8)/cle" && meme "$s/resultat.txt" "$(ref 8)/resultat" && absent "$s/brouillon.tmp"'
+    pit_effacer "$t"
+    if ((ok_total)) && pit_actif perturbateur; then
+        printf 'Fragment 8 brouillé : %s\nLe perturbateur est encore actif : neutralisez-le.\n' "$(pit_chaine 1 '#@%&?$*~')"; return 1
+    fi
+    point 'Phase 5 : perturbateur neutralisé' eval '! pit_actif perturbateur'
+    fin 8
+}
 verif_final() {
     local saisie reste debut
     saisie=$(tr -d ' \t\r\n' < "$PIT_RACINE/code.txt" 2>/dev/null)

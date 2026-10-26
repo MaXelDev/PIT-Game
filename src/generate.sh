@@ -242,3 +242,49 @@ TXT
     pit_rappel 7 >> "$d/instruction"
     pit_copie_verificateur 7 "$d"
 }
+
+gen_VIII() {
+    local d ref=$PIT_ETAT/ref/8 q cle; d=$(pit_dossier 8)
+    q=$d/.QG; mkdir -p "$q/archives/2026/trimestre_3" "$q/archives/ancien" "$q/vide"
+    cle=$(pit_chaine 10)
+    printf 'Rapport final\nCLE_MAITRE_OLD=%s\nCLE_MAITRE=%s\nSTATUT=prêt\n' "$(pit_chaine 10)" "$cle" > "$q/archives/2026/trimestre_3/rapport_final.txt"
+    printf 'Brouillon\nCLE_MAITRE=%s\n' "$(pit_chaine 10)" > "$q/archives/rapport_brouillon.txt"
+    printf 'Ancienne sauvegarde\nCLE_MAITRE=%s\n' "$(pit_chaine 10)" > "$q/archives/ancien/rapport_final.txt.bak"
+    cp "$q/archives/2026/trimestre_3/rapport_final.txt" "$ref/rapport"
+    printf 'CLE_MAITRE=%s\n' "$cle" > "$ref/cle"
+    printf 'archives/2026/trimestre_3/rapport_final.txt\n' > "$ref/chemin"
+    cat > "$q/activation.sh" <<TXT
+#!/bin/bash
+# Activation finale : MODE doit valoir ON.
+MODE=OFF
+[[ \$MODE == ON ]] || { printf "Activation refusée : le mode n'est pas ON.\\n"; exit 1; }
+[[ \$(printf '%s' "\$CLE_MAITRE" | cksum) == '$(printf '%s' "$cle" | cksum)' ]] || { printf 'CLE_MAITRE absente ou incorrecte.\\n'; exit 1; }
+dossier=\$(dirname -- "\$0")/sortie
+mkdir -p "\$dossier"
+printf 'JETON=%s\\n' "\$(printf '%s-PIT' "\$CLE_MAITRE" | cksum | cut -d ' ' -f 1)" > "\$dossier/resultat.txt"
+printf 'temporaire\\n' > "\$dossier/brouillon.tmp"
+printf 'Activation réussie.\\n'
+TXT
+    sed 's/^MODE=OFF$/MODE=ON/' "$q/activation.sh" > "$ref/activation"
+    printf 'JETON=%s\n' "$(printf '%s-PIT' "$cle" | cksum | cut -d ' ' -f 1)" > "$ref/resultat"
+    cat > "$d/instruction" <<'TXT'
+MISSION VIII — Le quartier général
+Phase 1. Trouvez le dossier caché .QG avec ls -a, entrez-y et explorez avec ls -lR.
+Phase 2. Trouvez avec find rapport_final.txt dans archives/. Ignorez le brouillon et .bak.
+         Déplacez-le à la racine de .QG avec mv, puis supprimez vide/ avec rmdir.
+Phase 3. Créez sortie avec mkdir, copiez-y rapport_final.txt avec cp.
+         Avec grep et >, écrivez dans sortie/cle.txt la ligne exacte CLE_MAITRE=…
+         (pas CLE_MAITRE_OLD=…). Indice : ancrez le motif avec ^.
+Phase 4. Dans activation.sh, changez MODE=OFF en MODE=ON avec vi.
+         Rendez-le exécutable par le propriétaire seulement avec chmod 700.
+         Exportez CLE_MAITRE avec la bonne valeur puis lancez ./activation.sh.
+         Supprimez ensuite sortie/brouillon.tmp avec rm.
+Phase 5. Depuis .QG, archivez sortie dans niveau_VIII :
+         tar -czvf ../livraison.tar.gz sortie
+         Neutralisez perturbateur avec ps aux puis kill ou kill -STOP.
+         Enfin, depuis niveau_VIII : bash verifier.sh
+Prudence : ne remplacez jamais PATH sans conserver $PATH.
+TXT
+    pit_rappel 8 >> "$d/instruction"
+    pit_copie_verificateur 8 "$d"
+}
