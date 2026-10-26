@@ -45,3 +45,30 @@ pit_generate() {
         "gen_${PIT_ROMAINS[n-1]}" || return 1
     done
 }
+
+gen_I() {
+    local d noms=(alpha bravo charlie delta) bon leurre i x max
+    d=$(pit_dossier 1); bon=${noms[RANDOM%4]}
+    for i in 0 1 2 3; do [[ ${noms[i]} == "$bon" ]] && leurre=${noms[(i + 1 + RANDOM % 3) % 4]}; done
+    max=$((12000 + RANDOM % 6000))
+    for x in "${noms[@]}"; do
+        mkdir -p "$d/$x"
+        for ((i=1;i<=3;i++)); do pit_remplir "$((500 + RANDOM % 4000))" "relevé $x $i" > "$d/$x/donnees_$i.dat"; done
+        printf "Ce n'est pas le bon dossier : cherchez encore.\n" > "$d/$x/.cle"
+    done
+    for ((i=4;i<=8;i++)); do pit_remplir "$((7000 + RANDOM % 2500))" "relevé $leurre $i" > "$d/$leurre/donnees_$i.dat"; done
+    pit_remplir 2000 "faux indice" > "$d/$leurre/le_plus_gros.dat"
+    pit_remplir "$max" "relevé lourd" > "$d/$bon/archive.bin"
+    printf 'Fragment 1 : %s\n' "${PIT_CODE:0:1}" > "$d/$bon/.cle"
+    cat > "$d/instruction" <<'TXT'
+MISSION I — Le fichier le plus lourd
+1. Quatre dossiers sont présents : alpha, bravo, charlie et delta.
+2. Entrez dans le dossier qui contient LE fichier individuel le plus lourd.
+3. Attention : un dossier avec beaucoup de fichiers n'est pas forcément le bon.
+4. Outils utiles : ls -l, ls -lh, ls -lS, ls -R, cd et cat.
+5. Le bon dossier contient un fichier caché .cle (pensez à ls -a).
+6. Revenez ici et lancez : bash verifier.sh, puis saisissez le fragment.
+TXT
+    pit_rappel 1 >> "$d/instruction"
+    pit_copie_verificateur 1 "$d"
+}

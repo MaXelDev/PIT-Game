@@ -14,6 +14,12 @@ d() { printf '%s/niveau_%s' "$PIT_RACINE" "${PIT_ROMAINS[$1-1]}"; }
 ref() { printf '%s/ref/%s' "$PIT_ETAT" "$1"; }
 fin() { if ((ok_total)); then pit_valider "$1"; else printf 'Niveau incomplet : corrigez les points marqués ✘.\n'; return 1; fi; }
 
+verif_1() {
+    local saisie
+    read -r -p 'Fragment du niveau I : ' saisie
+    point 'Fragment correct' test "$saisie" = "${PIT_CODE:0:1}"
+    fin 1
+}
 verif_final() {
     local saisie reste debut
     saisie=$(tr -d ' \t\r\n' < "$PIT_RACINE/code.txt" 2>/dev/null)
