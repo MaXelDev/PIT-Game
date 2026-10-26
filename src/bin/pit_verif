@@ -20,6 +20,17 @@ verif_1() {
     point 'Fragment correct' test "$saisie" = "${PIT_CODE:0:1}"
     fin 1
 }
+verif_2() {
+    local x; x=$(d 2)
+    point 'Dossier archive créé' test -d "$x/archive"
+    point 'Dossier tri créé' test -d "$x/tri"
+    point 'Copie dans archive/rapport.txt' meme "$x/archive/rapport.txt" "$(ref 2)/rapport.txt"
+    point 'Original renommé dans tri/rapport_old.txt' meme "$x/tri/rapport_old.txt" "$(ref 2)/rapport.txt"
+    point "Aucun rapport.txt ni rapport_old.txt à la racine du niveau" eval 'absent "$x/rapport.txt" && absent "$x/rapport_old.txt"'
+    point 'Dossier poubelle supprimé' absent "$x/poubelle"
+    point 'Seule la ligne INVALIDE a été supprimée' meme "$x/config.txt" "$(ref 2)/config.attendu"
+    fin 2
+}
 verif_final() {
     local saisie reste debut
     saisie=$(tr -d ' \t\r\n' < "$PIT_RACINE/code.txt" 2>/dev/null)

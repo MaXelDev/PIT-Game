@@ -72,3 +72,31 @@ TXT
     pit_rappel 1 >> "$d/instruction"
     pit_copie_verificateur 1 "$d"
 }
+
+gen_II() {
+    local d ref=$PIT_ETAT/ref/2 lignes=() i pos; d=$(pit_dossier 2)
+    mkdir -p "$d/poubelle"
+    printf 'Rapport de sécurité %s\nVérification des capteurs : %s\nSignature : %s\n' "$(pit_chaine 6)" "$(pit_chaine 10)" "$(pit_chaine 8)" > "$d/rapport.txt"
+    lignes=("SERVEUR=labo-$(pit_chaine 3)" "PORT=$((2000 + RANDOM % 6000))" "MODE_VALIDE=oui" "# Toutes les lignes sont VALIDES sauf une" "COMMENTAIRE=valide" "TIMEOUT=$((10 + RANDOM % 50))")
+    pos=$((RANDOM % (${#lignes[@]} + 1)))
+    : > "$d/config.txt"; : > "$ref/config.attendu"
+    for ((i=0;i<=${#lignes[@]};i++)); do
+        if ((i == pos)); then printf 'CLE_INVALIDE=%s\n' "$(pit_chaine 5)" >> "$d/config.txt"; fi
+        if ((i < ${#lignes[@]})); then printf '%s\n' "${lignes[i]}" | tee -a "$d/config.txt" >> "$ref/config.attendu"; fi
+    done
+    pit_remplir 200 tmp > "$d/poubelle/cache_1.tmp"; pit_remplir 300 tmp > "$d/poubelle/cache_2.tmp"
+    cp "$d/rapport.txt" "$ref/rapport.txt"
+    cat > "$d/instruction" <<'TXT'
+MISSION II — Rangement du laboratoire
+1. Créez les dossiers archive et tri.
+2. Copiez rapport.txt dans archive.
+3. Renommez l'original en rapport_old.txt puis déplacez-le dans tri.
+4. Videz le dossier poubelle avec rm, puis supprimez-le avec rmdir.
+5. Avec vi, supprimez uniquement la ligne contenant INVALIDE.
+   Attention : VALIDE et VALIDES ne sont pas INVALIDE.
+   Dans vi : placez le curseur sur la ligne, tapez dd, puis :wq.
+6. Lancez bash verifier.sh.
+TXT
+    pit_rappel 2 >> "$d/instruction"
+    pit_copie_verificateur 2 "$d"
+}
